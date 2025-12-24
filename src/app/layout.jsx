@@ -3,12 +3,16 @@ import { Inter } from "next/font/google";
 import { AnimeProvider } from "@/app/utils/AnimeContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { Icon } from "lucide-react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Watch Anime",
   description: "Your place to watch the latest and greatest anime!",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
