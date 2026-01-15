@@ -61,6 +61,8 @@ A modern, responsive anime discovery and streaming information platform built wi
     pnpm install
     ```
 
+    > **Note:** If you switch package managers (e.g., from `pnpm` to `npm`), make sure to delete the existing lock file (`pnpm-lock.yaml`, `package-lock.json`, or `yarn.lock`) and the `node_modules` folder before installing dependencies to avoid conflicts.
+
 3.  **Run the development server**
 
     ```bash
