@@ -120,5 +120,6 @@ This project is open source and available under the [MIT License](LICENSE.md).
 ## 🙏 Acknowledgements
 
 - [Kitsu.io](https://kitsu.io/) for providing the extensive anime database API.
+- [Jikan API](https://jikan.moe/) for supplemental character data (MyAnimeList).
 - [Vercel](https://vercel.com/) for Next.js and hosting solutions.
 - [shadcn/ui](https://ui.shadcn.com/) for the beautiful component library.
