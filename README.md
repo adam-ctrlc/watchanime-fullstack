@@ -1,26 +1,39 @@
 # WatchAnime
 
-A modern, responsive anime discovery and streaming information platform built with Next.js 15 and Tailwind CSS 4. This application features a premium glassmorphic UI, real-time search capabilities, and integration with the Kitsu API.
+A modern, responsive anime discovery and streaming information platform built with Next.js 15, Tailwind CSS 4, and **shadcn/ui**. This application features a premium glassmorphic UI, real-time search capabilities, and deep integration with the Kitsu API to provide a comprehensive anime database experience.
 
 ## 🌟 Features
 
-- **Modern UI/UX**: Designed with a sleek, dark-themed glassmorphic aesthetic focusing on depth, transparency, and smooth animations.
-- **Discover Anime**: Browse Trending, Most Popular, Top Rated, and Upcoming anime series.
-- **Detailed Information**: View comprehensive details including synopsis, ratings, episodes, characters, and related anime.
-- **Advanced Search**: Robust search functionality with real-time filtering by status, age rating, season, year, and sorting options.
-- **Watch Experience**: A mock episode player interface with a highly interactive episode selector.
+### 🎨 Modern UI/UX
+- **Glassmorphic Aesthetic**: Sleek, dark-themed design focusing on depth, transparency, and smooth animations.
+- **shadcn/ui Integration**: Built with robust, accessible components (Select, Skeleton, Cards, etc.).
 - **Responsive Design**: Fully optimized for mobile, tablet, and desktop devices.
-- **Accessibility**: Built with accessibility in mind, including proper ARIA attributes and keyboard navigation.
+
+### 🔍 Discovery & Content
+- **Browse Categories**: Trending, Most Popular, Top Rated, and Upcoming anime series.
+- **Advanced Search**: Real-time filtering by status, age rating, season, year, and sorting options.
+- **Franchise Tracking**: Visualize the entire series timeline, including sequels, prequels, and spin-offs.
+
+### 📄 Comprehensive Details
+- **Deep Information**: Synopsis, ratings, rankings, and production studio highlights.
+- **Character & Voice Actors**: Detailed character cards featuring Japanese voice actors (Seiyuu).
+- **Community Reviews**: Read user reviews with spoiler protection and markdown formatting.
+- **Memorable Quotes**: Curated list of iconic lines from the series.
+- **Streaming Links**: Direct links to official streaming platforms (Crunchyroll, Netflix, Hulu, etc.).
+
+### 📺 Watch Experience
+- **Interactive Player**: A mock episode player interface with a responsive episode selector.
+- **Mobile Optimized**: Enhanced controls and layout for viewing on smaller screens.
 
 ## 🛠 Tech Stack
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
 - **Language**: JavaScript / React 19
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **Icons**: [Lucide React](https://lucide.dev/) & [Heroicons](https://heroicons.com/)
-- **Data Fetching**: [SWR](https://swr.vercel.app/) & Native Fetch
-- **API**: [Kitsu API](https://kitsu.docs.apiary.io/)
-- **Utilities**: query-string, axios
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Data Fetching**: Native Fetch with deduplication and chunking strategies
+- **API**: [Kitsu API](https://kitsu.docs.apiary.io/) & Jikan API (Fallback)
+- **Utilities**: query-string, tailwind-merge, clsx
 
 ## 🚀 Getting Started
 
@@ -66,9 +79,11 @@ A modern, responsive anime discovery and streaming information platform built wi
 ```text
 src/
 ├── app/                    # Next.js App Router pages
-│   ├── api/                # Internal API routes acting as proxy
+│   ├── api/                # Internal API routes (proxy + logic)
+│   │   └── v1/anime/       # Deep data routes (franchise, reviews, etc.)
+│   ├── detail/             # Detailed info page before watching
 │   ├── search/             # Search page with filters
-│   ├── watch/              # Watch page with player and details
+│   ├── watch/              # Watch page with player and sidebars
 │   ├── globals.css         # Global styles and tailwind directives
 │   ├── layout.jsx          # Root layout
 │   └── page.jsx            # Homepage (Hero + Categories)
@@ -76,7 +91,7 @@ src/
 │   ├── features/           # Feature-specific components (AnimeCard, etc.)
 │   ├── layout/             # Layout components (Navbar, Footer, Hero)
 │   ├── status/             # Status indicators (Loading, Error)
-│   └── ui/                 # Generic UI components (Select, Buttons)
+│   └── ui/                 # shadcn/ui components (Button, Select, etc.)
 └── lib/                    # Utility functions
 ```
 
@@ -106,3 +121,4 @@ This project is open source and available under the [MIT License](LICENSE.md).
 
 - [Kitsu.io](https://kitsu.io/) for providing the extensive anime database API.
 - [Vercel](https://vercel.com/) for Next.js and hosting solutions.
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful component library.
