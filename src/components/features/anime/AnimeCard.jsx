@@ -30,7 +30,7 @@ export default function AnimeCard({ anime }) {
   return (
     <div className="group relative flex flex-col gap-2">
       <Link
-        href={`/watch/${anime.id}/1`}
+        href={`/detail/${anime.id}`}
         className="block relative w-full aspect-[2/3] overflow-hidden rounded-xl bg-gray-800"
       >
         {!imgError && imageUrl ? (
@@ -71,7 +71,7 @@ export default function AnimeCard({ anime }) {
       </Link>
 
       <div className="flex flex-col gap-1">
-        <Link href={`/watch/${anime.id}/1`}>
+        <Link href={`/detail/${anime.id}`}>
           <h3
             className="text-sm font-medium text-white group-hover:text-purple-400 transition-colors line-clamp-1"
             title={title}

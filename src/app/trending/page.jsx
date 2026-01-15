@@ -14,7 +14,7 @@ export default function TrendingAnimePage() {
     >
       <AnimePaginatedList
         title="Trending Anime"
-        endpoint="/trending/anime"
+        endpoint="/anime/trending"
         itemsPerPage={24}
       />
     </Suspense>

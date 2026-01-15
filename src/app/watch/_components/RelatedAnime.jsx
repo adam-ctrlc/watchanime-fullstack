@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import AnimeCard from "@/components/features/anime/AnimeCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function RelatedAnime({ animeId, categories }) {
+
   const [relatedAnime, setRelatedAnime] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -53,17 +55,13 @@ export default function RelatedAnime({ animeId, categories }) {
   let content;
   if (loading) {
     content = (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className="bg-white/5 rounded-xl overflow-hidden border border-white/5"
-          >
-            <div className="aspect-[2/3] bg-gray-700/50 animate-pulse"></div>
-            <div className="p-4 space-y-2">
-              <div className="h-4 bg-gray-700/50 rounded animate-pulse"></div>
-              <div className="h-3 bg-gray-700/50 rounded animate-pulse w-3/4"></div>
-              <div className="h-3 bg-gray-700/50 rounded animate-pulse w-1/2"></div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="flex flex-col gap-4">
+            <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-3/4 rounded-full" />
+              <Skeleton className="h-3 w-1/2 rounded-full" />
             </div>
           </div>
         ))}
@@ -77,7 +75,7 @@ export default function RelatedAnime({ animeId, categories }) {
     );
   } else {
     content = (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
         {relatedAnime.map((anime) => (
           <AnimeCard key={anime.id} anime={anime} />
         ))}
@@ -86,8 +84,8 @@ export default function RelatedAnime({ animeId, categories }) {
   }
 
   return (
-    <div className="mt-10">
-      <h2 className="text-xl font-semibold text-white mb-4">Related Anime</h2>
+    <div className="mt-8 md:mt-12">
+      <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 tracking-tight">Related Anime</h2>
       {content}
     </div>
   );

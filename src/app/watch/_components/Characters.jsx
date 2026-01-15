@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ArrowUpAZ, ArrowDownZA, UserX } from "lucide-react";
+
 
 export default function Characters({ characters }) {
   const [showMore, setShowMore] = useState(false);
@@ -44,33 +46,34 @@ export default function Characters({ characters }) {
   };
 
   return (
-    <div className="bg-[#121212]/40 backdrop-blur-lg border border-white/5 rounded-2xl p-6 mt-8 shadow-xl">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-white">Characters</h2>
+    <div className="bg-[#121212]/40 backdrop-blur-lg border border-white/5 rounded-2xl p-4 md:p-6 mt-8 shadow-xl">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Characters</h2>
         <button
           onClick={toggleSortOrder}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-white/5 px-2 py-1 rounded-lg"
           title={`Sort ${sortOrder === "asc" ? "descending" : "ascending"}`}
         >
           {sortOrder === "asc" ? (
             <>
-              <ArrowUpAZ className="h-5 w-5" />
-              <span className="text-sm">A-Z</span>
+              <ArrowUpAZ className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">A-Z</span>
             </>
           ) : (
             <>
-              <ArrowDownZA className="h-5 w-5" />
-              <span className="text-sm">Z-A</span>
+              <ArrowDownZA className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Z-A</span>
             </>
           )}
         </button>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {displayedCharacters.map((character) => {
           const characterData = character.characterData;
           const role = character.attributes?.role || "Unknown";
           const name = characterData?.attributes?.name || "Unknown Character";
           const image = characterData?.attributes?.image?.original;
+
 
           const getRoleColor = (role) => {
             switch (role.toLowerCase()) {
@@ -89,40 +92,80 @@ export default function Characters({ characters }) {
 
           return (
             <div key={character.id} className="text-center">
-              <div className="bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl p-3 h-full flex flex-col transition-all duration-300 hover:scale-[1.02] cursor-default group shadow-sm hover:shadow-purple-900/10">
-                <div className="w-16 h-20 mx-auto mb-3 bg-black/40 rounded-lg overflow-hidden shadow-inner">
+              <div className="bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl p-2 md:p-3 h-full flex flex-col transition-all duration-300 hover:scale-[1.02] cursor-default group shadow-sm hover:shadow-purple-900/10">
+                <div className="w-14 h-18 md:w-16 md:h-20 mx-auto mb-2 md:mb-3 bg-black/40 rounded-lg overflow-hidden shadow-inner relative">
                   {image ? (
-                    <img
+                    <Image
                       src={image}
                       alt={name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        e.target.nextSibling.style.display = "flex";
-                      }}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 56px, 64px"
                     />
-                  ) : null}
-                  <div
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ display: image ? "none" : "flex" }}
-                  >
-                    <span className="text-xs text-gray-400">No Image</span>
-                  </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-[10px] text-gray-400">?</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 flex flex-col gap-0.5 md:gap-1">
                   <p
-                    className="text-sm text-white font-medium mb-1 line-clamp-2"
+                    className="text-xs md:text-sm text-white font-medium line-clamp-1 md:line-clamp-2 leading-tight"
                     title={name}
                   >
                     {name}
                   </p>
                   <p
-                    className={`text-xs capitalize font-medium ${getRoleColor(
+                    className={`text-[10px] md:text-xs capitalize font-bold ${getRoleColor(
                       role
                     )}`}
                   >
                     {role}
                   </p>
+                  {character.voiceActors?.length > 0 && (
+                    <div className="mt-2.5 pt-2.5 border-t border-white/5 flex items-center justify-center gap-2">
+                      {character.voiceActors[0].attributes?.url ? (
+                        <a 
+                          href={character.voiceActors[0].attributes.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 group/va min-w-0"
+                        >
+                          {character.voiceActors[0].attributes?.image && (
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/10 shadow-sm group-hover/va:border-purple-500/50 transition-colors">
+                              <Image
+                                src={character.voiceActors[0].attributes.image}
+                                alt={character.voiceActors[0].attributes.name}
+                                fill
+                                className="object-cover"
+                                sizes="24px"
+                              />
+                            </div>
+                          )}
+                          <p className="text-[9px] md:text-[10px] text-gray-400 truncate font-bold leading-tight group-hover/va:text-purple-400 transition-colors max-w-[80px]">
+                            {character.voiceActors[0].attributes?.name}
+                          </p>
+                        </a>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2 min-w-0">
+                          {character.voiceActors[0].attributes?.image && (
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/10 shadow-sm">
+                              <Image
+                                src={character.voiceActors[0].attributes.image}
+                                alt={character.voiceActors[0].attributes.name}
+                                fill
+                                className="object-cover"
+                                sizes="24px"
+                              />
+                            </div>
+                          )}
+                          <p className="text-[9px] md:text-[10px] text-gray-400 truncate font-bold leading-tight max-w-[80px]">
+                            {character.voiceActors[0].attributes?.name}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

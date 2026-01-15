@@ -4,39 +4,21 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'media.kitsu.app', // Corrected hostname based on error
-        port: '',
-        pathname: '/anime/poster_images/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'media.kitsu.app', // Corrected hostname based on error
-        port: '',
-        pathname: '/anime/*/poster_image/**', // Added singular path
-      },
-      {
-        protocol: 'https',
-        hostname: 'media.kitsu.app', // Corrected hostname based on error
-        port: '',
-        pathname: '/anime/cover_images/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'media.kitsu.app',
         port: '',
-        pathname: '/episodes/thumbnails/**',
+        pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'media.kitsu.app',
+        hostname: 'media.kitsu.io',
         port: '',
-        pathname: '/episode/**', // Added to support episode thumbnails
+        pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'media.kitsu.app',
+        hostname: 'cdn.myanimelist.net',
         port: '',
-        pathname: '/anime/*/cover_image/**', // Added to support cover images with ID pattern
+        pathname: '/**',
       },
     ],
   },

@@ -62,7 +62,7 @@ export const AnimeProvider = ({ children }) => {
   };
 
   const value = {
-    trendingAnime: trendingAnime || [],
+    trendingAnime: trendingAnime?.data || trendingAnime || [],
     popularAnime: popularAnime?.data || popularAnime || [],
     topRatedAnime: topRatedAnime?.data || topRatedAnime || [],
     upcomingAnime: upcomingAnime?.data || upcomingAnime || [],

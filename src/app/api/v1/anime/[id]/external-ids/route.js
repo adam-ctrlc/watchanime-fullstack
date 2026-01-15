@@ -9,8 +9,7 @@ export async function GET(request, props) {
   const params = await props.params;
   try {
     const { id } = params;
-
-    const response = await fetchKitsu(`/anime/${id}/categories`);
+    const response = await fetchKitsu(`/anime/${id}/mappings`);
 
     const rateLimitResponse = handleRateLimit(response);
     if (rateLimitResponse) return rateLimitResponse;
@@ -21,8 +20,16 @@ export async function GET(request, props) {
     }
 
     const data = await response.json();
-    return createResponse(data);
+    const mappings = data.data || [];
+    
+    const malMapping = mappings.find(m => m.attributes?.externalSite === "myanimelist/anime");
+    const anilistMapping = mappings.find(m => m.attributes?.externalSite === "anilist/anime");
+
+    return createResponse({
+      malId: malMapping?.attributes?.externalId,
+      anilistId: anilistMapping?.attributes?.externalId,
+    });
   } catch (error) {
-    return handleError(error, "Failed to fetch categories");
+    return handleError(error, "Failed to fetch external IDs");
   }
 }

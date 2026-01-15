@@ -16,7 +16,7 @@ export default function Footer() {
       <div className="container mx-auto px-6 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}
-          <div className="space-y-4 md:col-span-2">
+          <div className="flex flex-col gap-4 md:col-span-2">
             <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent inline-block">
               WatchAnime
             </h2>
@@ -32,7 +32,7 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-6 tracking-wide text-sm uppercase">
               Explore
             </h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="flex flex-col gap-3 text-sm">
               <li>
                 <Link
                   href="/#hero"
@@ -73,7 +73,7 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-6 tracking-wide text-sm uppercase">
               Legal
             </h3>
-            <ul className="space-y-3 text-sm text-gray-500">
+            <ul className="flex flex-col gap-3 text-sm text-gray-500">
               <li>
                 <span className="block mb-2">
                   DISCLAIMER: This site does not store any files on its server.

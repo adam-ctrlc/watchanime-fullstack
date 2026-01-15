@@ -4,6 +4,7 @@ import Hero from "@/components/layout/Hero";
 import AnimeSection from "@/components/features/anime/AnimeSection";
 import LoadingSpinner from "@/components/status/LoadingSpinner";
 import { useAnimeContext } from "@/app/utils/AnimeContext";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const {
@@ -24,12 +25,12 @@ export default function Home() {
             Error Loading Anime Data
           </h2>
           <p className="mb-6 opacity-80">{error}</p>
-          <button
+          <Button
             onClick={fetchData}
-            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="bg-red-500 hover:bg-red-600 text-white font-semibold h-12 px-8 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -50,7 +51,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="py-12 space-y-12">
+      <div className="py-12 flex flex-col gap-12">
         <div id="trending">
           <AnimeSection
             title="Trending Now"

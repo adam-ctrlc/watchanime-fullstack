@@ -8,6 +8,7 @@ import EpisodeSelector from "@/app/watch/_components/EpisodeSelector";
 import ErrorDisplay from "@/components/status/ErrorDisplay";
 import RelatedAnime from "@/app/watch/_components/RelatedAnime";
 import Characters from "@/app/watch/_components/Characters";
+import Franchise from "@/app/watch/_components/Franchise";
 
 export default function WatchEpisodePage() {
   const params = useParams();
@@ -84,35 +85,90 @@ export default function WatchEpisodePage() {
         const allEpisodes = episodesData.data;
         setEpisodes(allEpisodes);
 
-        const charactersResponse = await fetch(
-          `/api/v1/anime/${animeId}/characters`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (!charactersResponse.ok) {
-          console.error(
-            `Failed to fetch characters: ${charactersResponse.statusText}`
-          );
-        } else {
+        const [charactersResponse, extResponse] = await Promise.all([
+          fetch(`/api/v1/anime/${animeId}/characters`, { headers: { "Content-Type": "application/json" } }),
+          fetch(`/api/v1/anime/${animeId}/external-ids`, { headers: { "Content-Type": "application/json" } })
+        ]);
+
+        let kitsuCharacters = [];
+        if (charactersResponse.ok) {
           const charactersData = await charactersResponse.json();
           const charactersWithData = charactersData.data || [];
-          const includedCharacters = charactersData.included || [];
+          const included = charactersData.included || [];
 
-          const enrichedCharacters = charactersWithData.map((charRelation) => {
+          kitsuCharacters = charactersWithData.map((charRelation) => {
             const characterId = charRelation.relationships?.character?.data?.id;
-            const characterData = includedCharacters.find(
-              (inc) => inc.id === characterId
+            const characterData = included.find((inc) => 
+              inc.id === characterId && 
+              (inc.type === "characters" || inc.type === "character")
             );
-            return {
-              ...charRelation,
-              characterData,
-            };
-          });
 
-          setCharacters(enrichedCharacters);
+            // Extract Kitsu voice actors
+            const voiceRefs = charRelation.relationships?.voices?.data || [];
+            const voiceIds = voiceRefs.map(ref => ref.id);
+            const voiceActors = included
+              .filter(inc => inc.type === "voices" && voiceIds.includes(inc.id))
+              .map(v => {
+                const personId = v.relationships?.person?.data?.id;
+                const person = included.find(inc => inc.id === personId && inc.type === "people");
+                if (person) {
+                  return {
+                    ...person,
+                    attributes: {
+                      ...person.attributes,
+                      url: `https://kitsu.io/people/${person.id}`
+                    }
+                  };
+                }
+                return null;
+              })
+              .filter(Boolean);
+
+            return { ...charRelation, characterData, voiceActors, source: "kitsu" };
+          }).filter(c => c.characterData);
+        }
+
+        // Jikan Fallback
+        if (kitsuCharacters.length === 0 && extResponse.ok) {
+          const extData = await extResponse.json();
+          if (extData.malId) {
+            try {
+              const jikanRes = await fetch(`https://api.jikan.moe/v4/anime/${extData.malId}/characters`);
+              if (jikanRes.ok) {
+                const jikanData = await jikanRes.json();
+                const jikanChars = (jikanData.data || []).map(jc => ({
+                  id: `jikan-${jc.character.mal_id}`,
+                  attributes: { role: jc.role },
+                  characterData: {
+                    attributes: {
+                      name: jc.character.name,
+                      image: { original: jc.character.images?.jpg?.image_url }
+                    }
+                  },
+                  voiceActors: jc.voice_actors
+                    ?.filter(va => va.language === "Japanese")
+                    ?.map(va => ({ 
+                      attributes: { 
+                        name: va.person.name,
+                        image: va.person.images?.jpg?.image_url,
+                        url: va.person.url
+                      } 
+                    })),
+                  source: "jikan"
+                }));
+                setCharacters(jikanChars);
+              } else {
+                setCharacters([]);
+              }
+            } catch (err) {
+              console.error("Jikan fetch error:", err);
+              setCharacters([]);
+            }
+          } else {
+            setCharacters([]);
+          }
+        } else {
+          setCharacters(kitsuCharacters);
         }
 
         const initialEpisode = allEpisodes.find(
@@ -198,11 +254,11 @@ export default function WatchEpisodePage() {
         <div className="container mx-auto px-4">
           <div className="h-10 bg-gray-800/50 rounded-xl animate-pulse mb-8 w-1/3"></div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 flex flex-col gap-6">
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl aspect-video animate-pulse border border-white/5"></div>
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-white/5">
                 <div className="h-6 bg-gray-700/50 rounded animate-pulse mb-4 w-1/2"></div>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <div className="h-4 bg-gray-700/50 rounded animate-pulse"></div>
                   <div className="h-4 bg-gray-700/50 rounded animate-pulse w-3/4"></div>
                 </div>
@@ -211,7 +267,7 @@ export default function WatchEpisodePage() {
             <div className="lg:col-span-1">
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-white/5">
                 <div className="h-6 bg-gray-700/50 rounded animate-pulse mb-6 w-1/3"></div>
-                <div className="space-y-3">
+                <div className="flex flex-col gap-3">
                   {[...Array(6)].map((_, i) => (
                     <div
                       key={i}
@@ -252,26 +308,26 @@ export default function WatchEpisodePage() {
     anime.attributes.canonicalTitle;
 
   return (
-    <div className="min-h-screen bg-transparent pt-24 pb-12">
+    <div className="min-h-screen bg-transparent pt-12 md:pt-24 pb-12">
       <div className="container mx-auto px-4">
         {/* Title Section */}
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-8 tracking-tight drop-shadow-lg">
+        <h1 className="text-2xl md:text-4xl font-black text-white mb-6 md:mb-8 tracking-tight drop-shadow-lg line-clamp-1 md:line-clamp-none">
           {title}
         </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
           {/* Main Content: Player & Info */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 flex flex-col gap-6 md:gap-8">
             <div className="rounded-2xl overflow-hidden shadow-2xl shadow-purple-900/20 ring-1 ring-white/10 bg-black/40 backdrop-blur-sm">
               {episodeLoading ? (
                 <div className="bg-gray-800/50 aspect-video animate-pulse flex items-center justify-center">
-                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-10 md:w-12 h-10 md:h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : (
                 <EpisodePlayer episode={currentEpisode} anime={anime} />
               )}
             </div>
-            <div className="bg-[#121212]/60 backdrop-blur-xl rounded-2xl border border-white/5 p-1 shadow-xl">
+            <div className="bg-[#121212]/60 backdrop-blur-xl rounded-2xl border border-white/5 p-0.5 md:p-1 shadow-xl">
               <EpisodeInfo episode={currentEpisode} anime={anime} />
             </div>
           </div>
@@ -289,14 +345,19 @@ export default function WatchEpisodePage() {
           </div>
         </div>
 
+        {/* Franchise Section */}
+        <div className="mb-8 md:mb-12">
+          <Franchise animeId={animeId} />
+        </div>
+
         {/* Characters Section */}
-        <div className="mb-12">
+        <div className="mb-8 md:mb-12">
           <Characters characters={characters} />
         </div>
 
         {/* Related Anime Section */}
         {categories.length > 0 && (
-          <div className="mt-12">
+          <div className="mt-8 md:mt-12">
             <RelatedAnime animeId={animeId} categories={categories} />
           </div>
         )}

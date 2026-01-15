@@ -5,12 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import queryString from "query-string";
 import AnimeCard from "@/components/features/anime/AnimeCard";
 import Select from "@/components/ui/Select";
-import {
-  FunnelIcon,
-  XMarkIcon,
-  ChevronDownIcon,
-} from "@heroicons/react/24/outline";
-import { SearchX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Filter, X, Search as SearchIcon } from "lucide-react";
 
 function SearchResults() {
   const searchParams = useSearchParams();
@@ -159,14 +155,10 @@ function SearchResults() {
       }
     });
 
-    console.log("Filter params:", updatedParams);
-
     const newUrl = queryString.stringifyUrl({
       url: "/search",
       query: updatedParams,
     });
-
-    console.log("New URL:", newUrl);
 
     router.replace(newUrl);
   };
@@ -206,10 +198,10 @@ function SearchResults() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent py-20 md:py-24">
+    <div className="min-h-screen bg-transparent py-24 md:py-32">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-white mb-4 sm:mb-0 tracking-tight">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+          <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
             {query ? (
               <>
                 Results for{" "}
@@ -223,75 +215,45 @@ function SearchResults() {
           </h1>
 
           {query && (
-            <button
+            <Button
               onClick={() => setShowFilters(!showFilters)}
-              className={`
-                flex justify-between items-center gap-3 bg-black/20 text-white rounded-xl px-4 py-2.5 text-sm
-                border border-white/10
-                focus:ring-2 focus:ring-purple-500/50 focus:outline-none
-                hover:bg-white/5 transition-all duration-200
-                ${
-                  showFilters
-                    ? "ring-2 ring-purple-500/50 border-purple-500/50"
-                    : ""
-                }
-              `}
+              variant={showFilters ? "secondary" : "outline"}
+              className={`h-12 px-6 rounded-xl border-white/10 gap-2 ${showFilters ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500/50' : 'bg-black/20 text-gray-300 hover:bg-white/5'}`}
             >
-              <div className="flex items-center gap-2">
-                <FunnelIcon className="h-4 w-4 text-gray-400" />
-                <span
-                  className={
-                    !hasActiveFilters ? "text-gray-400" : "text-gray-100"
-                  }
-                >
-                  Filters
+              <Filter className="w-4 h-4" />
+              <span>Filters</span>
+              {hasActiveFilters && (
+                <span className="bg-white text-purple-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-2">
+                  {Object.values(filters).filter((v) => v && v !== "relevance").length}
                 </span>
-                {hasActiveFilters && (
-                  <span className="bg-purple-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1">
-                    {
-                      Object.values(filters).filter(
-                        (v) => v && v !== "relevance"
-                      ).length
-                    }
-                  </span>
-                )}
-              </div>
-              <ChevronDownIcon
-                className={`h-4 w-4 text-gray-400 transition-transform duration-200 ml-2 ${
-                  showFilters ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+              )}
+            </Button>
           )}
         </div>
 
         {/* Filters Panel */}
         {showFilters && query && (
-          <div className="relative z-40 bg-[#121212]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8 shadow-2xl">
+          <div className="bg-[#121212]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8 shadow-2xl animate-in slide-in-from-top-4 duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <FunnelIcon className="h-5 w-5 text-purple-500" />
+                <Filter className="h-5 w-5 text-purple-500" />
                 Filter Options
               </h2>
               {hasActiveFilters && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={clearFilters}
-                  className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors group"
+                  className="text-gray-400 hover:text-white hover:bg-white/5 h-8 rounded-lg"
                 >
-                  <div className="bg-gray-800 p-1 rounded-full group-hover:bg-gray-700 transition-colors">
-                    <XMarkIcon className="h-3 w-3" />
-                  </div>
+                  <X className="h-4 w-4 mr-2" />
                   Clear all
-                </button>
+                </Button>
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {/* Sort By */}
-              {/* Sort By */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <Select
-                id="sortBy"
-                name="sortBy"
                 label="Sort by"
                 value={filters.sortBy}
                 onChange={(value) => handleFilterChange("sortBy", value)}
@@ -303,10 +265,7 @@ function SearchResults() {
                 ]}
               />
 
-              {/* Status Filter */}
               <Select
-                id="filterStatus"
-                name="filterStatus"
                 label="Status"
                 value={filters.status}
                 onChange={(value) => handleFilterChange("status", value)}
@@ -319,10 +278,7 @@ function SearchResults() {
                 ]}
               />
 
-              {/* Age Rating Filter */}
               <Select
-                id="ageRating"
-                name="ageRating"
                 label="Age Rating"
                 value={filters.ageRating}
                 onChange={(value) => handleFilterChange("ageRating", value)}
@@ -337,10 +293,7 @@ function SearchResults() {
                 ]}
               />
 
-              {/* Season Filter */}
               <Select
-                id="season"
-                name="season"
                 label="Season"
                 value={filters.season}
                 onChange={(value) => handleFilterChange("season", value)}
@@ -354,10 +307,7 @@ function SearchResults() {
                 ]}
               />
 
-              {/* Year Filter */}
               <Select
-                id="year"
-                name="year"
                 label="Year"
                 value={filters.year}
                 onChange={(value) => handleFilterChange("year", value)}
@@ -375,20 +325,13 @@ function SearchResults() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {Array.from({ length: 12 }).map((_, index) => (
-              <div
-                key={index}
-                className="bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden border border-white/5 relative flex flex-col animate-pulse"
-              >
-                <div className="relative w-full aspect-[2/3] bg-gray-700/50"></div>
-                <div className="p-4 flex flex-col flex-grow space-y-3">
-                  <div className="bg-gray-700/50 h-4 rounded w-3/4"></div>
-                  <div className="bg-gray-700/50 h-3 rounded w-1/2"></div>
-                  <div className="flex justify-between mt-auto pt-2">
-                    <div className="bg-gray-700/50 h-3 rounded w-16"></div>
-                    <div className="bg-gray-700/50 h-3 rounded w-12"></div>
-                  </div>
+              <div key={index} className="flex flex-col gap-4">
+                <div className="aspect-[2/3] bg-white/5 rounded-2xl animate-pulse" />
+                <div className="flex flex-col gap-2">
+                  <div className="h-4 bg-white/5 rounded-full animate-pulse w-3/4" />
+                  <div className="h-3 bg-white/5 rounded-full animate-pulse w-1/2" />
                 </div>
               </div>
             ))}
@@ -401,8 +344,8 @@ function SearchResults() {
             </div>
           </div>
         ) : searchResults.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 opacity-70">
-            <SearchX className="w-24 h-24 mb-6 text-gray-700" />
+          <div className="flex flex-col items-center justify-center py-32 opacity-70">
+            <SearchIcon className="w-24 h-24 mb-6 text-gray-700" />
             <p className="text-gray-400 text-xl font-medium mb-4">
               {query
                 ? hasActiveFilters
@@ -411,33 +354,27 @@ function SearchResults() {
                 : "Enter a search term to discover anime."}
             </p>
             {hasActiveFilters && (
-              <button
+              <Button
+                variant="link"
                 onClick={clearFilters}
-                className="text-purple-400 hover:text-purple-300 font-medium transition-colors border-b border-purple-400/30 hover:border-purple-300"
+                className="text-purple-400 hover:text-purple-300 font-medium h-auto p-0"
               >
                 Clear filters to see all results
-              </button>
+              </Button>
             )}
           </div>
         ) : (
-          <div>
-            {/* Results count */}
+          <div className="flex flex-col gap-8">
             {query && (
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-gray-400 text-sm font-medium">
-                  Found{" "}
-                  <span className="text-white font-bold">
-                    {searchResults.length}
-                  </span>{" "}
-                  result
-                  {searchResults.length !== 1 ? "s" : ""}
-                  {hasActiveFilters &&
-                    ` (filtered from ${originalResults.length})`}
-                </p>
-              </div>
+              <p className="text-gray-400 text-sm font-medium">
+                Found{" "}
+                <span className="text-white font-bold">{searchResults.length}</span>{" "}
+                result{searchResults.length !== 1 ? "s" : ""}
+                {hasActiveFilters && ` (filtered from ${originalResults.length})`}
+              </p>
             )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {searchResults.map((anime, index) => (
                 <AnimeCard
                   key={anime.id}
@@ -456,15 +393,12 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-transparent py-24">
+        <div className="min-h-screen pt-32">
           <div className="container mx-auto px-4">
-            <div className="h-10 bg-gray-800 rounded-xl mb-8 animate-pulse w-64"></div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="h-12 bg-white/5 rounded-xl mb-8 animate-pulse w-64"></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {Array.from({ length: 12 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-800/50 rounded-xl overflow-hidden border border-white/5 relative flex flex-col animate-pulse aspect-[2/3]"
-                ></div>
+                <div key={index} className="aspect-[2/3] bg-white/5 rounded-2xl animate-pulse" />
               ))}
             </div>
           </div>

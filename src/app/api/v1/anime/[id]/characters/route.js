@@ -3,14 +3,14 @@ import {
   createResponse,
   handleError,
   handleRateLimit,
-} from "../../../config";
+} from "@/app/api/v1/config";
 
 export async function GET(request, props) {
   const params = await props.params;
   try {
     const { id } = params;
     const urlParams = {
-      include: "character",
+      include: "character,voices.person",
       sort: "role",
     };
 

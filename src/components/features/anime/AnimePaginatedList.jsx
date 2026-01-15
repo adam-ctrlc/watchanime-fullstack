@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import AnimeCard from "./AnimeCard";
-import LoadingSpinner from "@/components/status/LoadingSpinner";
 import Pagination from "@/components/ui/Pagination";
+import { Skeleton } from "@/components/ui/skeleton";
+import ErrorDisplay from "@/components/status/ErrorDisplay";
 
 export default function AnimePaginatedList({
   title,
@@ -26,23 +27,29 @@ export default function AnimePaginatedList({
     hasPreviousPage: false,
   });
 
-  const fetchKey = `${endpoint}-${JSON.stringify(apiParams)}-${currentPage}`;
+  const apiParamsString = JSON.stringify(apiParams);
 
   const fetchAnimeList = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Use local API base path
-      const url = new URL(endpoint, window.location.origin + "/api/v1");
+      const apiPath = `/api/v1${endpoint.startsWith("/") ? endpoint : "/" + endpoint}`;
+      const url = new URL(apiPath, window.location.origin);
 
+      // Add common pagination params
       url.searchParams.append("page[limit]", itemsPerPage.toString());
       url.searchParams.append(
         "page[offset]",
         ((currentPage - 1) * itemsPerPage).toString()
       );
 
-      Object.entries(apiParams).forEach(([key, value]) => {
+      // Also add 'limit' for APIs that don't use page[limit]
+      url.searchParams.append("limit", itemsPerPage.toString());
+
+      const paramsObj = apiParamsString ? JSON.parse(apiParamsString) : {};
+
+      Object.entries(paramsObj).forEach(([key, value]) => {
         if (typeof value === "object" && value !== null) {
           Object.entries(value).forEach(([nestedKey, nestedValue]) => {
             url.searchParams.append(`filter[${nestedKey}]`, nestedValue);
@@ -64,9 +71,12 @@ export default function AnimePaginatedList({
       }
 
       const data = await response.json();
-      setAnimeList(data.data || []);
+      
+      // Robustly handle different response formats
+      const list = Array.isArray(data) ? data : (data.data || []);
+      setAnimeList(list);
 
-      const total = data.meta?.count || 0;
+      const total = data.meta?.count || (Array.isArray(data) ? data.length : list.length);
       const totalPages = Math.ceil(total / itemsPerPage) || 1;
 
       setPagination({
@@ -81,7 +91,7 @@ export default function AnimePaginatedList({
     } finally {
       setLoading(false);
     }
-  }, [endpoint, apiParams, currentPage, itemsPerPage, fetchKey]);
+  }, [endpoint, apiParamsString, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchAnimeList();
@@ -90,38 +100,36 @@ export default function AnimePaginatedList({
   const showLoadingState = loading && animeList.length === 0;
 
   return (
-    <div className="min-h-screen bg-gray-900 py-12">
+    <div className="min-h-screen bg-transparent py-24 md:py-32">
       <div className="container mx-auto px-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">
+        <h1 className="text-3xl md:text-5xl font-black text-white mb-12 tracking-tight">
           {title}
         </h1>
 
         {showLoadingState ? (
-          <div className="flex justify-center items-center min-h-[50vh]">
-            <LoadingSpinner size="large" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <div key={index} className="flex flex-col gap-4">
+                <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-4 w-3/4 rounded-full" />
+                  <Skeleton className="h-3 w-1/2 rounded-full" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
-          <div className="bg-red-900/30 border border-red-500 text-white p-6 rounded-lg max-w-lg mx-auto text-center">
-            <h2 className="text-xl font-bold mb-3">Error</h2>
-            <p>{error}</p>
-          </div>
-        ) : animeList.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-400">No anime found.</p>
-          </div>
+          <ErrorDisplay title="Error" message={error} retryAction={fetchAnimeList} />
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {animeList.map((anime) => (
-                <AnimeCard key={anime.id} anime={anime} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {animeList.map((anime, index) => (
+                <AnimeCard 
+                  key={anime.id} 
+                  anime={{ ...anime, priority: index < 6 }} 
+                />
               ))}
             </div>
-
-            {loading && !showLoadingState && (
-              <div className="flex justify-center my-4">
-                <LoadingSpinner size="small" />
-              </div>
-            )}
 
             <Pagination
               currentPage={pagination.currentPage}

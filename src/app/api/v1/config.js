@@ -29,12 +29,95 @@ export function handleRateLimit(response, limit = 10) {
 }
 
 export async function fetchKitsu(endpoint, params = {}, options = {}) {
+  // Determine requested limit and offset
+  const requestedLimit = parseInt(params["page[limit]"] || params["limit"] || 20);
+  const requestedOffset = parseInt(params["page[offset]"] || params["offset"] || 0);
+
+  // If limit is within Kitsu's max (20), do a single fetch
+  if (requestedLimit <= 20) {
+    const response = await _fetchKitsuSingle(endpoint, params, options);
+    if (!response.ok) return response;
+    
+    const data = await response.json();
+    if (data.data && Array.isArray(data.data)) {
+      const uniqueData = Array.from(new Map(data.data.map(item => [item.id, item])).values());
+      data.data = uniqueData;
+    }
+    
+    return {
+      ...response,
+      ok: true,
+      status: 200,
+      json: async () => data,
+    };
+  }
+
+  // Otherwise, perform multiple fetches to satisfy the requested limit
+  const fetchPromises = [];
+  let remaining = requestedLimit;
+  let currentOffset = requestedOffset;
+
+  while (remaining > 0) {
+    const currentLimit = Math.min(remaining, 20);
+    const chunkParams = { ...params };
+    
+    // Ensure we set the correct pagination keys for this chunk
+    chunkParams["page[limit]"] = currentLimit;
+    chunkParams["page[offset]"] = currentOffset;
+    
+    // Remove the simple 'limit' if it exists to avoid confusion
+    if (chunkParams["limit"]) delete chunkParams["limit"];
+    if (chunkParams["offset"]) delete chunkParams["offset"];
+
+    fetchPromises.push(_fetchKitsuSingle(endpoint, chunkParams, options));
+
+    remaining -= currentLimit;
+    currentOffset += currentLimit;
+  }
+
+  try {
+    const responses = await Promise.all(fetchPromises);
+
+    // Check for any failed requests
+    const failedResponse = responses.find((r) => !r.ok);
+    if (failedResponse) return failedResponse;
+
+    // Merge and deduplicate the data from all chunks
+    const jsonResults = await Promise.all(responses.map((r) => r.json()));
+    
+    const allData = jsonResults.flatMap((j) => j.data || []);
+    const uniqueData = Array.from(new Map(allData.map(item => [item.id, item])).values());
+
+    const allIncluded = jsonResults.flatMap((j) => j.included || []);
+    const uniqueIncluded = Array.from(new Map(allIncluded.map(item => [`${item.type}-${item.id}`, item])).values());
+
+    const mergedData = {
+      data: uniqueData,
+      included: uniqueIncluded,
+      meta: jsonResults[0]?.meta || { count: 0 },
+      links: jsonResults[0]?.links || {},
+    };
+
+    // Return a synthetic response object that matches the Fetch API Response interface
+    return {
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      json: async () => mergedData,
+      headers: responses[0].headers,
+    };
+  } catch (error) {
+    console.error("Fetch chunking error:", error);
+    throw error; // Will be caught by handleError in the route
+  }
+}
+
+async function _fetchKitsuSingle(endpoint, params = {}, options = {}) {
   const url = new URL(`${KITSU_BASE_URL}${endpoint}`);
 
   // Construct Kitsu specific query params
   Object.entries(params).forEach(([key, value]) => {
     if (typeof value === "object" && value !== null) {
-      // Handle nested filters like filter[status]=upcoming
       Object.entries(value).forEach(([nestedKey, nestedValue]) => {
         url.searchParams.append(`filter[${nestedKey}]`, nestedValue);
       });
@@ -49,13 +132,12 @@ export async function fetchKitsu(endpoint, params = {}, options = {}) {
     "User-Agent": "AnimeApp/1.0",
   };
 
-  const response = await fetch(url.toString(), {
+  return fetch(url.toString(), {
     ...options,
     headers: { ...defaultHeaders, ...(options.headers || {}) },
   });
-
-  return response;
 }
+
 
 export function createResponse(data, status = 200) {
   return Response.json(data, {

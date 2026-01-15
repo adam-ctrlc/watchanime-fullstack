@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 export default function Pagination({
   currentPage,
@@ -56,67 +57,81 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className='flex items-center justify-center my-8'>
-      <nav className='flex items-center space-x-2'>
+    <div className='flex items-center justify-center my-12'>
+      <nav className='flex items-center gap-2 bg-[#121212]/60 backdrop-blur-xl p-2 rounded-2xl border border-white/10'>
         {/* Previous page button */}
         {hasPreviousPage ? (
-          <Link
-            href={createPageURL(currentPage - 1)}
-            className='flex items-center px-3 py-2 rounded-md text-white bg-purple-600 hover:bg-purple-700'
-            aria-label='Previous page'
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white"
           >
-            <ChevronLeftIcon className='h-5 w-5' />
-          </Link>
+            <Link href={createPageURL(currentPage - 1)}>
+              <ChevronLeft className='h-5 w-5' />
+            </Link>
+          </Button>
         ) : (
-          <span
-            className='flex items-center px-3 py-2 rounded-md text-gray-400 bg-gray-700 cursor-not-allowed'
-            aria-disabled='true'
+          <Button
+            disabled
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl opacity-20 cursor-not-allowed"
           >
-            <ChevronLeftIcon className='h-5 w-5' />
-          </span>
+            <ChevronLeft className='h-5 w-5' />
+          </Button>
         )}
 
         {/* Page numbers */}
-        {getPageNumbers().map((pageNumber, index) =>
-          pageNumber === '...' ? (
-            <span key={`ellipsis-${index}`} className='px-3 py-2 text-gray-400'>
-              ...
-            </span>
-          ) : currentPage === pageNumber ? (
-            <span
-              key={pageNumber}
-              className='px-3 py-2 rounded-md bg-purple-600 text-white'
-              aria-current='page'
-            >
-              {pageNumber}
-            </span>
-          ) : (
-            <Link
-              key={pageNumber}
-              href={createPageURL(pageNumber)}
-              className='px-3 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white'
-            >
-              {pageNumber}
-            </Link>
-          )
-        )}
+        <div className="flex items-center gap-1">
+          {getPageNumbers().map((pageNumber, index) =>
+            pageNumber === '...' ? (
+              <span key={`ellipsis-${index}`} className='w-10 text-center text-gray-500'>
+                ...
+              </span>
+            ) : currentPage === pageNumber ? (
+              <Button
+                key={pageNumber}
+                className='h-10 w-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-900/20'
+              >
+                {pageNumber}
+              </Button>
+            ) : (
+              <Button
+                key={pageNumber}
+                asChild
+                variant="ghost"
+                className='h-10 w-10 rounded-xl text-gray-400 hover:text-white hover:bg-white/5'
+              >
+                <Link href={createPageURL(pageNumber)}>
+                  {pageNumber}
+                </Link>
+              </Button>
+            )
+          )}
+        </div>
 
         {/* Next page button */}
         {hasNextPage ? (
-          <Link
-            href={createPageURL(currentPage + 1)}
-            className='flex items-center px-3 py-2 rounded-md text-white bg-purple-600 hover:bg-purple-700'
-            aria-label='Next page'
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white"
           >
-            <ChevronRightIcon className='h-5 w-5' />
-          </Link>
+            <Link href={createPageURL(currentPage + 1)}>
+              <ChevronRight className='h-5 w-5' />
+            </Link>
+          </Button>
         ) : (
-          <span
-            className='flex items-center px-3 py-2 rounded-md text-gray-400 bg-gray-700 cursor-not-allowed'
-            aria-disabled='true'
+          <Button
+            disabled
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl opacity-20 cursor-not-allowed"
           >
-            <ChevronRightIcon className='h-5 w-5' />
-          </span>
+            <ChevronRight className='h-5 w-5' />
+          </Button>
         )}
       </nav>
     </div>

@@ -8,7 +8,7 @@ import {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get("limit") || "10";
+    const limit = searchParams.get("page[limit]") || searchParams.get("limit") || "10";
 
     const response = await fetchKitsu("/trending/anime", { limit: limit });
 
@@ -22,8 +22,7 @@ export async function GET(request) {
     }
 
     const data = await response.json();
-    // Return only the 'data' array as per previous usage
-    return createResponse(data.data);
+    return createResponse(data);
   } catch (error) {
     return handleError(error, "Failed to fetch trending anime");
   }

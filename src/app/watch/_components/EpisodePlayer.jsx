@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { PlayIcon } from '@heroicons/react/24/solid';
-import { PauseIcon } from '@heroicons/react/24/solid';
-import { SpeakerWaveIcon } from '@heroicons/react/24/solid';
-import { SpeakerXMarkIcon } from '@heroicons/react/24/solid';
-import { FilmIcon } from '@heroicons/react/24/solid';
-import { Loader2 } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Film, Loader2, Maximize, RotateCcw, RotateCw } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 
 export default function EpisodePlayer({ episode, anime }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -15,7 +13,9 @@ export default function EpisodePlayer({ episode, anime }) {
   const [duration, setDuration] = useState(0);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const videoRef = useRef(null);
+  const controlsTimeoutRef = useRef(null);
 
   const placeholderThumbnail =
     episode.attributes.thumbnail?.original ||
@@ -29,18 +29,9 @@ export default function EpisodePlayer({ episode, anime }) {
     const videoElement = videoRef.current;
 
     if (videoElement) {
-      const handleTimeUpdate = () => {
-        setCurrentTime(videoElement.currentTime);
-      };
-
-      const handleDurationChange = () => {
-        setDuration(videoElement.duration);
-      };
-
-      const handleLoadedData = () => {
-        setLoading(false);
-      };
-
+      const handleTimeUpdate = () => setCurrentTime(videoElement.currentTime);
+      const handleDurationChange = () => setDuration(videoElement.duration);
+      const handleLoadedData = () => setLoading(false);
       const handleError = () => {
         setVideoError(true);
         setLoading(false);
@@ -53,10 +44,7 @@ export default function EpisodePlayer({ episode, anime }) {
 
       return () => {
         videoElement.removeEventListener('timeupdate', handleTimeUpdate);
-        videoElement.removeEventListener(
-          'durationchange',
-          handleDurationChange
-        );
+        videoElement.removeEventListener('durationchange', handleDurationChange);
         videoElement.removeEventListener('loadeddata', handleLoadedData);
         videoElement.removeEventListener('error', handleError);
       };
@@ -65,24 +53,16 @@ export default function EpisodePlayer({ episode, anime }) {
 
   const togglePlay = () => {
     if (videoError) return;
-
     const video = videoRef.current;
     if (video) {
-      if (isPlaying) {
-        video.pause();
-      } else {
-        video.play().catch((err) => {
-          console.error('Error playing video:', err);
-          setVideoError(true);
-        });
-      }
+      if (isPlaying) video.pause();
+      else video.play().catch(() => setVideoError(true));
       setIsPlaying(!isPlaying);
     }
   };
 
   const toggleMute = () => {
     if (videoError) return;
-
     const video = videoRef.current;
     if (video) {
       video.muted = !isMuted;
@@ -90,120 +70,137 @@ export default function EpisodePlayer({ episode, anime }) {
     }
   };
 
-  const handleSeek = (e) => {
-    if (videoError) return;
-
+  const handleSliderChange = (value) => {
     const video = videoRef.current;
-    if (video && !isNaN(video.duration) && isFinite(video.duration) && video.duration > 0) {
-      const seekTime =
-        (e.nativeEvent.offsetX / e.target.clientWidth) * video.duration;
-      if (isFinite(seekTime) && seekTime >= 0 && seekTime <= video.duration) {
-        video.currentTime = seekTime;
-        setCurrentTime(seekTime);
-      }
+    if (video && duration) {
+      const newTime = value[0];
+      video.currentTime = newTime;
+      setCurrentTime(newTime);
     }
   };
 
   const formatTime = (timeInSeconds) => {
     if (isNaN(timeInSeconds)) return '0:00';
-
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  return (
-    <div className='bg-gray-800 rounded-lg overflow-hidden'>
-      <div className='relative aspect-video bg-black'>
-        {/* Video element - hidden when there's an error */}
-        {!videoError && (
-          <video
-            ref={videoRef}
-            className='w-full h-full object-contain'
-            poster={placeholderThumbnail}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onError={() => setVideoError(true)}
-          >
-            {/* Note: In a real app, you would provide actual video sources */}
-            Your browser does not support the video tag.
-          </video>
-        )}
+  const handleMouseMove = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (isPlaying) setShowControls(false);
+    }, 3000);
+  };
 
-        {/* Video Error State */}
-        {videoError && (
-          <div className='absolute inset-0 flex flex-col items-center justify-center bg-gray-900'>
-            {placeholderThumbnail && (
-              <div
-                className='absolute inset-0 bg-center bg-cover opacity-20'
-                style={{ backgroundImage: `url(${placeholderThumbnail})` }}
-              ></div>
-            )}
-            <FilmIcon className='h-20 w-20 text-gray-400 mb-4' />
-            <h3 className='text-xl font-bold text-white mb-2'>
-              Video Not Available
-            </h3>
-            <p className='text-gray-400 text-center max-w-md px-4'>
-              This is a demo application. Real video content is not available
-              for this episode.
+  return (
+    <div 
+      className='group relative bg-black rounded-2xl overflow-hidden aspect-video shadow-2xl ring-1 ring-white/10'
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => isPlaying && setShowControls(false)}
+    >
+      {/* Video Element */}
+      {!videoError && (
+        <video
+          ref={videoRef}
+          className='w-full h-full object-contain cursor-pointer'
+          poster={placeholderThumbnail}
+          onClick={togglePlay}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        >
+          Your browser does not support the video tag.
+        </video>
+      )}
+
+      {/* Error State */}
+      {videoError && (
+        <div className='absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] p-8 text-center'>
+          {placeholderThumbnail && (
+            <div
+              className='absolute inset-0 bg-center bg-cover opacity-10 blur-sm'
+              style={{ backgroundImage: `url(${placeholderThumbnail})` }}
+            />
+          )}
+          <div className="relative z-10 flex flex-col gap-4">
+            <Film className='h-16 w-16 text-gray-700 mx-auto' />
+            <h3 className='text-2xl font-black text-white tracking-tight'>Video Not Available</h3>
+            <p className='text-gray-500 max-w-sm mx-auto text-sm leading-relaxed'>
+              This is a demonstration. Content for <span className="text-purple-400 font-bold">{episodeTitle}</span> is currently unavailable in this preview.
             </p>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Loading overlay */}
-        {loading && !videoError && (
-          <div className='absolute inset-0 flex items-center justify-center bg-black/50'>
-            <Loader2 className='h-12 w-12 text-white animate-spin' />
-          </div>
-        )}
+      {/* Loading State */}
+      {loading && !videoError && (
+        <div className='absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm'>
+          <Loader2 className='h-12 w-12 text-purple-500 animate-spin' />
+        </div>
+      )}
 
-        {/* Video controls overlay - hidden in error state */}
-        {!videoError && (
-          <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4'>
-            <div className='flex items-center space-x-4'>
-              <button
-                onClick={togglePlay}
-                className='text-white'
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isPlaying ? (
-                  <PauseIcon className='h-6 w-6' />
-                ) : (
-                  <PlayIcon className='h-6 w-6' />
-                )}
-              </button>
+      {/* Top Bar Info */}
+      <div className={`absolute top-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="flex items-center gap-3 md:gap-4">
+          <Badge className="bg-purple-600 text-white border-none font-black px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs">
+            EP {episode.attributes.number}
+          </Badge>
+          <h4 className="text-white text-sm md:text-base font-bold truncate drop-shadow-md">{episodeTitle}</h4>
+        </div>
+      </div>
 
-              <button
-                onClick={toggleMute}
-                className='text-white'
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? (
-                  <SpeakerXMarkIcon className='h-6 w-6' />
-                ) : (
-                  <SpeakerWaveIcon className='h-6 w-6' />
-                )}
-              </button>
+      {/* Controls */}
+      {!videoError && (
+        <div className={`absolute bottom-0 left-0 right-0 p-3 md:p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex flex-col gap-2 md:gap-4">
+            {/* Seek Bar */}
+            <div className="px-1 md:px-2">
+              <Slider
+                value={[currentTime]}
+                max={duration || 100}
+                step={0.1}
+                onValueChange={handleSliderChange}
+                className="cursor-pointer"
+              />
+            </div>
 
-              <div className='text-white text-sm'>
-                {formatTime(currentTime)} / {formatTime(duration)}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 md:gap-2">
+                <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/10 rounded-xl h-9 w-9 md:h-10 md:w-10">
+                  {isPlaying ? <Pause className="h-5 w-5 md:h-6 md:w-6 fill-white" /> : <Play className="h-5 w-5 md:h-6 md:w-6 fill-white" />}
+                </Button>
+                
+                <Button variant="ghost" size="icon" onClick={() => {if(videoRef.current) videoRef.current.currentTime -= 10}} className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl h-8 w-8 md:h-10 md:w-10">
+                  <RotateCcw className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+
+                <Button variant="ghost" size="icon" onClick={() => {if(videoRef.current) videoRef.current.currentTime += 10}} className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl h-8 w-8 md:h-10 md:w-10">
+                  <RotateCw className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+
+                <div className="hidden sm:flex items-center gap-2 ml-2">
+                  <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white hover:bg-white/10 rounded-xl h-10 w-10">
+                    {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                  </Button>
+                </div>
+
+                <div className="text-white/90 text-[10px] md:text-sm font-black tracking-tighter ml-1 md:ml-2">
+                  <span className="text-purple-400">{formatTime(currentTime)}</span>
+                  <span className="mx-1 opacity-40">/</span>
+                  <span className="opacity-60">{formatTime(duration)}</span>
+                </div>
               </div>
 
-              <div className='flex-grow'>
-                <div
-                  className='h-2 bg-gray-700 rounded-full cursor-pointer'
-                  onClick={handleSeek}
-                >
-                  <div
-                    className='h-full bg-purple-500 rounded-full'
-                    style={{ width: `${(currentTime / duration) * 100 || 0}%` }}
-                  ></div>
-                </div>
+              <div className="flex items-center gap-1 md:gap-2">
+                <Button variant="ghost" size="icon" onClick={() => videoRef.current?.requestFullscreen()} className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl h-8 w-8 md:h-10 md:w-10">
+                  <Maximize className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
